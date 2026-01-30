@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.health.mapper.AppointmentRatingMapper">
+
+    <resultMap type="com.ruoyi.health.domain.AppointmentRating" id="AppointmentRatingResult">
+        <result property="id" column="id"/>
+        <result property="appointmentId" column="appointment_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="psychologistId" column="psychologist_id"/>
+        <result property="ratingScore" column="rating_score"/>
+        <result property="ratingComment" column="rating_comment"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="userName" column="user_name"/>
+        <result property="psychologistName" column="psychologist_name"/>
+    </resultMap>
+
+    <sql id="selectAppointmentRatingVo">
+        select
+        ar.id, ar.appointment_id, ar.user_id,
+        ar.psychologist_id, ar.rating_score, ar.rating_comment,
+        ar.create_time, ar.update_time, ar.del_flag,
+        u.nick_name as user_name,
+        p.nick_name as psychologist_name
+        from appointment_rating ar
+        left join sys_user u on ar.user_id = u.user_id
+        left join sys_user p on ar.psychologist_id = p.user_id
+    </sql>
+
+    <select id="selectAppointmentRatingById" parameterType="Long" resultMap="AppointmentRatingResult">
+        <include refid="selectAppointmentRatingVo"/>
+        where ar.id = #{id} and ar.del_flag = '0'
+    </select>
+
+    <select id="selectAppointmentRatingList" parameterType="com.ruoyi.health.domain.AppointmentRating" resultMap="AppointmentRatingResult">
+        <include refid="selectAppointmentRatingVo"/>
+        <where>
+            ar.del_flag = '0'
+            <if test="appointmentId != null"> and ar.appointment_id = #{appointmentId}</if>
+            <if test="userId != null"> and ar.user_id = #{userId}</if>
+            <if test="psychologistId != null"> and ar.psychologist_id = #{psychologistId}</if>
+            <if test="ratingScore != null"> and ar.rating_score = #{ratingScore}</if>
+            <if test="ratingComment != null and ratingComment != ''"> and ar.rating_comment like concat('%', #{ratingComment}, '%')</if>
+        </where>
+        order by ar.create_time desc
+    </select>
+
+    <select id="selectByAppointmentId" parameterType="Long" resultMap="AppointmentRatingResult">
+        <include refid="selectAppointmentRatingVo"/>
+        where ar.appointment_id = #{appointmentId} and ar.del_flag = '0'
+        limit 1
+    </select>
+
+    <select id="selectAvgRatingByPsychologistId" parameterType="Long" resultType="java.math.BigDecimal">
+        select ifnull(avg(rating_score), 0)
+        from appointment_rating
+        where psychologist_id = #{psychologistId} and del_flag = '0'
+    </select>
+
+    <select id="selectRatingCountByPsychologistId" parameterType="Long" resultType="int">
+        select count(*)
+        from appointment_rating
+        where psychologist_id = #{psychologistId} and del_flag = '0'
+    </select>
+
+    <select id="selectByPsychologistId" parameterType="Long" resultMap="AppointmentRatingResult">
+        <include refid="selectAppointmentRatingVo"/>
+        where ar.psychologist_id = #{psychologistId} and ar.del_flag = '0'
+        order by ar.create_time desc
+    </select>
+
+    <insert id="insertAppointmentRating" parameterType="com.ruoyi.health.domain.AppointmentRating" useGeneratedKeys="true" keyProperty="id">
+        insert into appointment_rating
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="appointmentId != null">appointment_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="psychologistId != null">psychologist_id,</if>
+            <if test="ratingScore != null">rating_score,</if>
+            <if test="ratingComment != null and ratingComment != ''">rating_comment,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null and delFlag != ''">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="appointmentId != null">#{appointmentId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="psychologistId != null">#{psychologistId},</if>
+            <if test="ratingScore != null">#{ratingScore},</if>
+            <if test="ratingComment != null and ratingComment != ''">#{ratingComment},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="updateAppointmentRating" parameterType="com.ruoyi.health.domain.AppointmentRating">
+        update appointment_rating
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="appointmentId != null">appointment_id = #{appointmentId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="psychologistId != null">psychologist_id = #{psychologistId},</if>
+            <if test="ratingScore != null">rating_score = #{ratingScore},</if>
+            <if test="ratingComment != null">rating_comment = #{ratingComment},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null and delFlag != ''">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteAppointmentRatingById" parameterType="Long">
+        update appointment_rating set del_flag = '2' where id = #{id}
+    </update>
+
+    <update id="deleteAppointmentRatingByIds" parameterType="Long[]">
+        update appointment_rating set del_flag = '2' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

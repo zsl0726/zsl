@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.health.mapper.AiConversationMapper">
+
+    <resultMap type="AiConversation" id="AiConversationResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="userName"    column="user_name"    />
+        <result property="sessionId"    column="session_id"    />
+        <result property="messageType"    column="message_type"    />
+        <result property="content"    column="content"    />
+        <result property="tokenUsage"    column="token_usage"    />
+        <result property="modelName"    column="model_name"    />
+        <result property="conversationTime"    column="conversation_time"    />
+        <result property="isDeleted"    column="is_deleted"    />
+    </resultMap>
+
+    <sql id="selectAiConversationVo">
+        select id, user_id, user_name, session_id, message_type, content, token_usage, model_name, conversation_time, is_deleted from ai_conversation
+    </sql>
+
+    <select id="selectAiConversationList" parameterType="AiConversation" resultMap="AiConversationResult">
+        <include refid="selectAiConversationVo"/>
+        <where>
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="userName != null and userName != ''"> and user_name like concat('%', #{userName}, '%')</if>
+            <if test="sessionId != null and sessionId != ''"> and session_id = #{sessionId}</if>
+            <if test="messageType != null"> and message_type = #{messageType}</if>
+            <if test="isDeleted != null"> and is_deleted = #{isDeleted}</if>
+            <if test="isDeleted == null"> and is_deleted = '0'</if>
+        </where>
+    </select>
+
+    <select id="selectAiConversationById" parameterType="Long" resultMap="AiConversationResult">
+        <include refid="selectAiConversationVo"/>
+        where id = #{id}
+    </select>
+
+    <!-- 修复：添加 parameterType 明确指定 -->
+    <select id="selectBySessionId" parameterType="String" resultMap="AiConversationResult">
+        <include refid="selectAiConversationVo"/>
+        where session_id = #{sessionId} and is_deleted = '0'
+        order by conversation_time asc
+    </select>
+
+    <select id="selectByUserId" parameterType="Long" resultMap="AiConversationResult">
+        <include refid="selectAiConversationVo"/>
+        where user_id = #{userId} and is_deleted = '0'
+        order by conversation_time desc
+    </select>
+
+    <!-- 修复：简化SQL，避免复杂子查询 -->
+    <select id="selectUserSessionIds" parameterType="Long" resultType="String">
+        SELECT DISTINCT session_id
+        FROM ai_conversation
+        WHERE user_id = #{userId}
+        AND is_deleted = '0'
+        ORDER BY session_id DESC
+    </select>
+
+    <select id="countBySessionId" parameterType="String" resultType="int">
+        select count(*) from ai_conversation
+        where session_id = #{sessionId} and is_deleted = '0'
+    </select>
+
+    <!-- 关键修复：这里使用 parameterType="map" 或者使用明确的参数 -->
+    <update id="deleteBySessionId" parameterType="map">
+        update ai_conversation
+        set is_deleted = '1'
+        where session_id = #{sessionId}
+        and user_id = #{userId}
+        and is_deleted = '0'
+    </update>
+
+    <!-- 关键修复：同样使用 parameterType="map" -->
+    <update id="updateIsDeletedBySessionId" parameterType="map">
+        update ai_conversation
+        set is_deleted = #{isDeleted}
+        where session_id = #{sessionId}
+        and user_id = #{userId}
+    </update>
+
+    <insert id="insertAiConversation" parameterType="AiConversation" useGeneratedKeys="true" keyProperty="id">
+        insert into ai_conversation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null">user_name,</if>
+            <if test="sessionId != null and sessionId != ''">session_id,</if>
+            <if test="messageType != null">message_type,</if>
+            <if test="content != null">content,</if>
+            <if test="tokenUsage != null">token_usage,</if>
+            <if test="modelName != null">model_name,</if>
+            <if test="conversationTime != null">conversation_time,</if>
+            <if test="isDeleted != null">is_deleted,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null">#{userName},</if>
+            <if test="sessionId != null and sessionId != ''">#{sessionId},</if>
+            <if test="messageType != null">#{messageType},</if>
+            <if test="content != null">#{content},</if>
+            <if test="tokenUsage != null">#{tokenUsage},</if>
+            <if test="modelName != null">#{modelName},</if>
+            <if test="conversationTime != null">#{conversationTime},</if>
+            <if test="isDeleted != null">#{isDeleted},</if>
+        </trim>
+    </insert>
+
+    <update id="updateAiConversation" parameterType="AiConversation">
+        update ai_conversation
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="userName != null">user_name = #{userName},</if>
+            <if test="sessionId != null and sessionId != ''">session_id = #{sessionId},</if>
+            <if test="messageType != null">message_type = #{messageType},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="tokenUsage != null">token_usage = #{tokenUsage},</if>
+            <if test="modelName != null">model_name = #{modelName},</if>
+            <if test="conversationTime != null">conversation_time = #{conversationTime},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAiConversationById" parameterType="Long">
+        delete from ai_conversation where id = #{id}
+    </delete>
+
+    <delete id="deleteAiConversationByIds" parameterType="String">
+        delete from ai_conversation where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

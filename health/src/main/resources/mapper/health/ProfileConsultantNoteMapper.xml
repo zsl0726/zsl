@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.health.mapper.ProfileConsultantNoteMapper">
+
+    <resultMap type="ProfileConsultantNote" id="ProfileConsultantNoteResult">
+        <result property="id" column="id"/>
+        <result property="profileId" column="profile_id"/>
+        <result property="consultantId" column="consultant_id"/>
+        <result property="consultantName" column="consultant_name"/>
+        <result property="content" column="content"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectProfileConsultantNoteVo">
+        SELECT id, profile_id, consultant_id, consultant_name, content, create_time, update_time
+        FROM profile_consultant_note
+    </sql>
+
+    <!-- 修改这里：通过profile_id关联查询，而不是直接查询user_id -->
+    <select id="selectNotesByUserId" parameterType="Long" resultMap="ProfileConsultantNoteResult">
+        SELECT
+        n.id,
+        n.profile_id,
+        n.consultant_id,
+        n.consultant_name,
+        n.content,
+        n.create_time,
+        n.update_time
+        FROM profile_consultant_note n
+        INNER JOIN mental_profile p ON n.profile_id = p.id
+        WHERE p.user_id = #{userId}
+        ORDER BY n.create_time DESC
+    </select>
+
+    <select id="selectProfileConsultantNoteList" parameterType="ProfileConsultantNote" resultMap="ProfileConsultantNoteResult">
+        <include refid="selectProfileConsultantNoteVo"/>
+        <where>
+            <if test="profileId != null">
+                AND profile_id = #{profileId}
+            </if>
+            <!-- 移除user_id条件，因为表中没有这个字段 -->
+            <!--
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            -->
+            <if test="consultantId != null">
+                AND consultant_id = #{consultantId}
+            </if>
+            <if test="consultantName != null and consultantName != ''">
+                AND consultant_name LIKE CONCAT('%', #{consultantName}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 其他方法保持不变 -->
+    <select id="selectProfileConsultantNoteById" parameterType="Long" resultMap="ProfileConsultantNoteResult">
+        <include refid="selectProfileConsultantNoteVo"/>
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insertProfileConsultantNote" parameterType="ProfileConsultantNote" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO profile_consultant_note
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="profileId != null">profile_id,</if>
+            <!-- 移除user_id插入，因为表中没有这个字段 -->
+            <!--
+            <if test="userId != null">user_id,</if>
+            -->
+            <if test="consultantId != null">consultant_id,</if>
+            <if test="consultantName != null and consultantName != ''">consultant_name,</if>
+            <if test="content != null">content,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="profileId != null">#{profileId},</if>
+            <!-- 移除user_id值 -->
+            <!--
+            <if test="userId != null">#{userId},</if>
+            -->
+            <if test="consultantId != null">#{consultantId},</if>
+            <if test="consultantName != null and consultantName != ''">#{consultantName},</if>
+            <if test="content != null">#{content},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateProfileConsultantNote" parameterType="ProfileConsultantNote">
+        UPDATE profile_consultant_note
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="profileId != null">profile_id = #{profileId},</if>
+            <!-- 移除user_id更新 -->
+            <!--
+            <if test="userId != null">user_id = #{userId},</if>
+            -->
+            <if test="consultantId != null">consultant_id = #{consultantId},</if>
+            <if test="consultantName != null and consultantName != ''">consultant_name = #{consultantName},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteProfileConsultantNoteById" parameterType="Long">
+        DELETE FROM profile_consultant_note WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteProfileConsultantNoteByIds" parameterType="String">
+        DELETE FROM profile_consultant_note WHERE id IN
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.health.mapper.AssessmentRecordMapper">
+    <resultMap type="AssessmentRecord" id="AssessmentRecordResult">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="scaleCode" column="scale_code"/>
+        <result property="scaleName" column="scale_name"/>
+        <result property="answersJson" column="answers_json"/>
+        <result property="totalScore" column="total_score"/>
+        <result property="standardScore" column="standard_score"/>
+        <result property="resultLevel" column="result_level"/>
+        <result property="riskLevel" column="risk_level"/>
+        <result property="suggestion" column="suggestion"/>
+        <result property="assessmentTime" column="assessment_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectAssessmentRecordVo">
+        select id, user_id, user_name, scale_code, scale_name, answers_json, total_score, standard_score, result_level, risk_level, suggestion, assessment_time, create_by, create_time, update_by, update_time, remark from assessment_record
+    </sql>
+
+    <select id="selectAssessmentRecordList" parameterType="AssessmentRecord" resultMap="AssessmentRecordResult">
+        <include refid="selectAssessmentRecordVo"/>
+        <where>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="userName != null  and userName != ''"> and user_name like concat('%', #{userName}, '%')</if>
+            <if test="scaleCode != null  and scaleCode != ''"> and scale_code = #{scaleCode}</if>
+            <if test="scaleName != null  and scaleName != ''"> and scale_name like concat('%', #{scaleName}, '%')</if>
+            <if test="resultLevel != null  and resultLevel != ''"> and result_level = #{resultLevel}</if>
+            <if test="riskLevel != null  and riskLevel != ''"> and risk_level = #{riskLevel}</if>
+            <if test="beginAssessmentTime != null and beginAssessmentTime != ''"><!-- 开始时间检索 -->
+                and date_format(assessment_time,'%y%m%d') &gt;= date_format(#{beginAssessmentTime},'%y%m%d')
+            </if>
+            <if test="endAssessmentTime != null and endAssessmentTime != ''"><!-- 结束时间检索 -->
+                and date_format(assessment_time,'%y%m%d') &lt;= date_format(#{endAssessmentTime},'%y%m%d')
+            </if>
+        </where>
+        order by assessment_time desc
+    </select>
+
+    <select id="selectAssessmentRecordById" parameterType="Long" resultMap="AssessmentRecordResult">
+        <include refid="selectAssessmentRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAssessmentRecord" parameterType="AssessmentRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into assessment_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="scaleCode != null and scaleCode != ''">scale_code,</if>
+            <if test="scaleName != null and scaleName != ''">scale_name,</if>
+            <if test="answersJson != null">answers_json,</if>
+            <if test="totalScore != null">total_score,</if>
+            <if test="standardScore != null">standard_score,</if>
+            <if test="resultLevel != null and resultLevel != ''">result_level,</if>
+            <if test="riskLevel != null and riskLevel != ''">risk_level,</if>
+            <if test="suggestion != null">suggestion,</if>
+            <if test="assessmentTime != null">assessment_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="scaleCode != null and scaleCode != ''">#{scaleCode},</if>
+            <if test="scaleName != null and scaleName != ''">#{scaleName},</if>
+            <if test="answersJson != null">#{answersJson},</if>
+            <if test="totalScore != null">#{totalScore},</if>
+            <if test="standardScore != null">#{standardScore},</if>
+            <if test="resultLevel != null and resultLevel != ''">#{resultLevel},</if>
+            <if test="riskLevel != null and riskLevel != ''">#{riskLevel},</if>
+            <if test="suggestion != null">#{suggestion},</if>
+            <if test="assessmentTime != null">#{assessmentTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateAssessmentRecord" parameterType="AssessmentRecord">
+        update assessment_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="scaleCode != null and scaleCode != ''">scale_code = #{scaleCode},</if>
+            <if test="scaleName != null and scaleName != ''">scale_name = #{scaleName},</if>
+            <if test="answersJson != null">answers_json = #{answersJson},</if>
+            <if test="totalScore != null">total_score = #{totalScore},</if>
+            <if test="standardScore != null">standard_score = #{standardScore},</if>
+            <if test="resultLevel != null and resultLevel != ''">result_level = #{resultLevel},</if>
+            <if test="riskLevel != null and riskLevel != ''">risk_level = #{riskLevel},</if>
+            <if test="suggestion != null">suggestion = #{suggestion},</if>
+            <if test="assessmentTime != null">assessment_time = #{assessmentTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAssessmentRecordById" parameterType="Long">
+        delete from assessment_record where id = #{id}
+    </delete>
+
+    <delete id="deleteAssessmentRecordByIds" parameterType="String">
+        delete from assessment_record where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

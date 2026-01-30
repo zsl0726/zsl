@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.health.mapper.ConsultationAppointmentMapper">
+
+    <resultMap type="com.ruoyi.health.domain.ConsultationAppointment" id="ConsultationAppointmentResult">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="psychologistId" column="psychologist_id"/>
+        <result property="psychologistName" column="psychologist_name"/>
+        <result property="appointmentDate" column="appointment_date"/>
+        <result property="timeSlot" column="time_slot"/>
+        <result property="locationId" column="location_id"/>
+        <result property="locationName" column="location_name"/>
+        <result property="problemDescription" column="problem_description"/>
+        <result property="urgencyLevel" column="urgency_level"/>
+        <result property="status" column="status"/>
+        <result property="counselingNotes" column="counseling_notes"/>
+        <result property="ratingId" column="rating_id"/>
+        <result property="ratingScore" column="rating_score"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectConsultationAppointmentVo">
+        select id, user_id, user_name, psychologist_id, psychologist_name, appointment_date,
+        time_slot, location_id, location_name, problem_description, urgency_level,
+        status, counseling_notes, rating_id, rating_score, is_deleted, create_time, update_time
+        from consultation_appointment
+    </sql>
+
+    <!-- 基础查询 -->
+    <select id="selectConsultationAppointmentById" parameterType="Long" resultMap="ConsultationAppointmentResult">
+        <include refid="selectConsultationAppointmentVo"/>
+        where id = #{id} and is_deleted = '0'
+    </select>
+
+    <select id="selectConsultationAppointmentList" parameterType="com.ruoyi.health.domain.ConsultationAppointment" resultMap="ConsultationAppointmentResult">
+        <include refid="selectConsultationAppointmentVo"/>
+        <where>
+            is_deleted = '0'
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="userName != null and userName != ''"> and user_name like concat('%', #{userName}, '%')</if>
+            <if test="psychologistId != null"> and psychologist_id = #{psychologistId}</if>
+            <if test="psychologistName != null and psychologistName != ''"> and psychologist_name like concat('%', #{psychologistName}, '%')</if>
+            <if test="appointmentDate != null"> and appointment_date = #{appointmentDate}</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+            <if test="urgencyLevel != null and urgencyLevel != ''"> and urgency_level = #{urgencyLevel}</if>
+        </where>
+        order by appointment_date desc, create_time desc
+    </select>
+
+    <!-- 用户预约列表 -->
+    <select id="selectUserAppointments" resultMap="ConsultationAppointmentResult">
+        <include refid="selectConsultationAppointmentVo"/>
+        where is_deleted = '0' and user_id = #{userId}
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        order by appointment_date desc, create_time desc
+    </select>
+
+    <!-- 咨询师预约列表 -->
+    <select id="selectPsychologistAppointments" resultMap="ConsultationAppointmentResult">
+        <include refid="selectConsultationAppointmentVo"/>
+        where is_deleted = '0' and psychologist_id = #{psychologistId}
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        order by appointment_date, time_slot
+    </select>
+
+    <!-- 更新预约状态 -->
+    <update id="updateAppointmentStatus">
+        update consultation_appointment
+        <set>
+            status = #{status},
+            <if test="counselingNotes != null and counselingNotes != ''">
+                counseling_notes = #{counselingNotes},
+            </if>
+            update_time = sysdate()
+        </set>
+        where id = #{id} and is_deleted = '0'
+    </update>
+
+    <!-- 用户取消预约 -->
+    <update id="cancelAppointment">
+        update consultation_appointment
+        set status = 'cancelled',
+        update_time = sysdate()
+        where id = #{id} and user_id = #{userId} and is_deleted = '0'
+    </update>
+
+    <!-- 预约统计 -->
+    <select id="selectAppointmentStatistics" resultType="java.util.Map">
+        select
+        count(*) as total,
+        sum(case when status = 'pending' then 1 else 0 end) as pending_count,
+        sum(case when status = 'accepted' then 1 else 0 end) as accepted_count,
+        sum(case when status = 'completed' then 1 else 0 end) as completed_count,
+        sum(case when status = 'cancelled' then 1 else 0 end) as cancelled_count
+        from consultation_appointment
+        where is_deleted = '0' and psychologist_id = #{psychologistId}
+    </select>
+
+    <!-- 今日预约 -->
+    <select id="selectTodayAppointments" resultMap="ConsultationAppointmentResult">
+        <include refid="selectConsultationAppointmentVo"/>
+        where is_deleted = '0'
+        and psychologist_id = #{psychologistId}
+        and appointment_date = curdate()
+        and status in ('pending', 'accepted')
+        order by time_slot
+    </select>
+
+    <!-- 按状态统计 -->
+    <select id="selectAppointmentCountByStatus" resultType="java.util.Map">
+        select status, count(*) as count
+        from consultation_appointment
+        where is_deleted = '0'
+        <if test="userId != null">
+            and user_id = #{userId}
+        </if>
+        <if test="psychologistId != null">
+            and psychologist_id = #{psychologistId}
+        </if>
+        group by status
+    </select>
+
+    <!-- ============ 新增：咨询师首页查询 ============ -->
+
+    <!-- 查询咨询师今日预约（支持指定日期） -->
+    <select id="selectTodayAppointmentsByPsychologistId" resultMap="ConsultationAppointmentResult">
+        <include refid="selectConsultationAppointmentVo"/>
+        where is_deleted = '0'
+        and psychologist_id = #{psychologistId}
+        and appointment_date = #{date}
+        and status in ('pending', 'accepted')
+        order by time_slot asc
+    </select>
+
+    <!-- 查询咨询师待处理预约 -->
+    <select id="selectPendingAppointmentsByPsychologistId" resultMap="ConsultationAppointmentResult">
+        <include refid="selectConsultationAppointmentVo"/>
+        where is_deleted = '0'
+        and psychologist_id = #{psychologistId}
+        and status = 'pending'
+        order by create_time desc
+    </select>
+
+    <!-- 统计咨询师今日预约数量 -->
+    <select id="countTodayAppointmentsByPsychologistId" resultType="int">
+        select count(*)
+        from consultation_appointment
+        where is_deleted = '0'
+        and psychologist_id = #{psychologistId}
+        and appointment_date = #{date}
+        and status in ('pending', 'accepted')
+    </select>
+
+    <!-- 统计咨询师待处理预约数量 -->
+    <select id="countPendingAppointmentsByPsychologistId" resultType="int">
+        select count(*)
+        from consultation_appointment
+        where is_deleted = '0'
+        and psychologist_id = #{psychologistId}
+        and status = 'pending'
+    </select>
+
+    <!-- 统计咨询师已完成咨询数量 -->
+    <select id="countCompletedAppointmentsByPsychologistId" resultType="int">
+        select count(*)
+        from consultation_appointment
+        where is_deleted = '0'
+        and psychologist_id = #{psychologistId}
+        and status = 'completed'
+    </select>
+
+    <!-- 插入 -->
+    <insert id="insertConsultationAppointment" parameterType="com.ruoyi.health.domain.ConsultationAppointment" useGeneratedKeys="true" keyProperty="id">
+        insert into consultation_appointment (
+        user_id, user_name, psychologist_id, psychologist_name,
+        appointment_date, time_slot, location_id, location_name,
+        problem_description, urgency_level, status,
+        counseling_notes, create_time, update_time
+        ) values (
+        #{userId}, #{userName}, #{psychologistId}, #{psychologistName},
+        #{appointmentDate}, #{timeSlot}, #{locationId}, #{locationName},
+        #{problemDescription}, #{urgencyLevel}, #{status},
+        #{counselingNotes}, sysdate(), sysdate()
+        )
+    </insert>
+
+    <update id="updateConsultationAppointment" parameterType="com.ruoyi.health.domain.ConsultationAppointment">
+        update consultation_appointment
+        <set>
+            <if test="appointmentDate != null">appointment_date = #{appointmentDate},</if>
+            <if test="timeSlot != null and timeSlot != ''">time_slot = #{timeSlot},</if>
+            <if test="locationId != null">location_id = #{locationId},</if>
+            <if test="locationName != null and locationName != ''">location_name = #{locationName},</if>
+            <if test="problemDescription != null">problem_description = #{problemDescription},</if>
+            <if test="urgencyLevel != null and urgencyLevel != ''">urgency_level = #{urgencyLevel},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="counselingNotes != null">counseling_notes = #{counselingNotes},</if>
+            <if test="ratingId != null">rating_id = #{ratingId},</if>
+            <if test="ratingScore != null">rating_score = #{ratingScore},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id} and is_deleted = '0'
+    </update>
+
+    <!-- 逻辑删除 -->
+    <update id="deleteConsultationAppointmentById" parameterType="Long">
+        update consultation_appointment
+        set is_deleted = '1', update_time = sysdate()
+        where id = #{id}
+    </update>
+
+    <!-- 批量逻辑删除 -->
+    <update id="deleteConsultationAppointmentByIds" parameterType="Long">
+        update consultation_appointment
+        set is_deleted = '1', update_time = sysdate()
+        where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.health.mapper.ConsultationLocationMapper">
+    
+    <resultMap type="ConsultationLocation" id="ConsultationLocationResult">
+        <result property="id"    column="id"    />
+        <result property="locationName"    column="location_name"    />
+        <result property="address"    column="address"    />
+        <result property="roomNumbers"    column="room_numbers"    />
+        <result property="availableTimes"    column="available_times"    />
+        <result property="capacity"    column="capacity"    />
+        <result property="isAvailable"    column="is_available"    />
+        <result property="description"    column="description"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectConsultationLocationVo">
+        select id, location_name, address, room_numbers, available_times, capacity, is_available, description, create_time, update_time, create_by, update_by, remark from consultation_location
+    </sql>
+
+    <select id="selectConsultationLocationList" parameterType="ConsultationLocation" resultMap="ConsultationLocationResult">
+        <include refid="selectConsultationLocationVo"/>
+        <where>  
+            <if test="locationName != null  and locationName != ''"> and location_name like concat('%', #{locationName}, '%')</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="roomNumbers != null  and roomNumbers != ''"> and room_numbers = #{roomNumbers}</if>
+            <if test="availableTimes != null  and availableTimes != ''"> and available_times = #{availableTimes}</if>
+            <if test="capacity != null "> and capacity = #{capacity}</if>
+            <if test="isAvailable != null  and isAvailable != ''"> and is_available = #{isAvailable}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+        </where>
+    </select>
+    
+    <select id="selectConsultationLocationById" parameterType="Long" resultMap="ConsultationLocationResult">
+        <include refid="selectConsultationLocationVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertConsultationLocation" parameterType="ConsultationLocation" useGeneratedKeys="true" keyProperty="id">
+        insert into consultation_location
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="locationName != null and locationName != ''">location_name,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="roomNumbers != null">room_numbers,</if>
+            <if test="availableTimes != null">available_times,</if>
+            <if test="capacity != null">capacity,</if>
+            <if test="isAvailable != null">is_available,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="locationName != null and locationName != ''">#{locationName},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="roomNumbers != null">#{roomNumbers},</if>
+            <if test="availableTimes != null">#{availableTimes},</if>
+            <if test="capacity != null">#{capacity},</if>
+            <if test="isAvailable != null">#{isAvailable},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateConsultationLocation" parameterType="ConsultationLocation">
+        update consultation_location
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="locationName != null and locationName != ''">location_name = #{locationName},</if>
+            <if test="address != null and address != ''">address = #{address},</if>
+            <if test="roomNumbers != null">room_numbers = #{roomNumbers},</if>
+            <if test="availableTimes != null">available_times = #{availableTimes},</if>
+            <if test="capacity != null">capacity = #{capacity},</if>
+            <if test="isAvailable != null">is_available = #{isAvailable},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteConsultationLocationById" parameterType="Long">
+        delete from consultation_location where id = #{id}
+    </delete>
+
+    <delete id="deleteConsultationLocationByIds" parameterType="String">
+        delete from consultation_location where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

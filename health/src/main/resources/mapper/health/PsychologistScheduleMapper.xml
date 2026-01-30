@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.health.mapper.PsychologistScheduleMapper">
+
+    <resultMap type="PsychologistSchedule" id="PsychologistScheduleResult">
+        <result property="id" column="id"/>
+        <result property="psychologistId" column="psychologist_id"/>
+        <result property="psychologistName" column="psychologist_name"/>
+        <result property="scheduleDate" column="schedule_date"/>
+        <result property="timeSlots" column="time_slots"/>
+        <result property="maxAppointments" column="max_appointments"/>
+        <result property="isAvailable" column="is_available"/>
+        <result property="remarks" column="remarks"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectPsychologistScheduleVo">
+        select id, psychologist_id, psychologist_name, schedule_date, time_slots, max_appointments,
+        is_available, remarks, is_deleted, create_by, create_time, update_by, update_time
+        from psychologist_schedule
+    </sql>
+
+    <select id="selectPsychologistScheduleById" parameterType="Long" resultMap="PsychologistScheduleResult">
+        <include refid="selectPsychologistScheduleVo"/>
+        where id = #{id} and is_deleted = 0
+    </select>
+
+    <select id="selectPsychologistScheduleList" parameterType="PsychologistSchedule" resultMap="PsychologistScheduleResult">
+        <include refid="selectPsychologistScheduleVo"/>
+        <where>
+            is_deleted = 0
+            <if test="psychologistId != null"> and psychologist_id = #{psychologistId}</if>
+            <if test="psychologistName != null and psychologistName != ''"> and psychologist_name like concat('%', #{psychologistName}, '%')</if>
+            <if test="scheduleDate != null"> and schedule_date = #{scheduleDate}</if>
+            <if test="isAvailable != null and isAvailable != ''"> and is_available = #{isAvailable}</if>
+        </where>
+        order by schedule_date desc
+    </select>
+
+    <select id="selectScheduleByPsychologistAndDate" resultMap="PsychologistScheduleResult">
+        <include refid="selectPsychologistScheduleVo"/>
+        where psychologist_id = #{psychologistId}
+        and schedule_date = #{scheduleDate}
+        and is_deleted = 0
+    </select>
+
+    <select id="selectScheduleByMonth" resultMap="PsychologistScheduleResult">
+        <include refid="selectPsychologistScheduleVo"/>
+        where psychologist_id = #{psychologistId}
+        and schedule_date between #{startDate} and #{endDate}
+        and is_deleted = 0
+        order by schedule_date asc
+    </select>
+
+    <insert id="insertPsychologistSchedule" parameterType="PsychologistSchedule" useGeneratedKeys="true" keyProperty="id">
+        insert into psychologist_schedule
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="psychologistId != null">psychologist_id,</if>
+            <if test="psychologistName != null and psychologistName != ''">psychologist_name,</if>
+            <if test="scheduleDate != null">schedule_date,</if>
+            <if test="timeSlots != null and timeSlots != ''">time_slots,</if>
+            <if test="maxAppointments != null">max_appointments,</if>
+            <if test="isAvailable != null and isAvailable != ''">is_available,</if>
+            <if test="remarks != null and remarks != ''">remarks,</if>
+            <if test="isDeleted != null">is_deleted,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null and updateBy != ''">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="psychologistId != null">#{psychologistId},</if>
+            <if test="psychologistName != null and psychologistName != ''">#{psychologistName},</if>
+            <if test="scheduleDate != null">#{scheduleDate},</if>
+            <if test="timeSlots != null and timeSlots != ''">#{timeSlots},</if>
+            <if test="maxAppointments != null">#{maxAppointments},</if>
+            <if test="isAvailable != null and isAvailable != ''">#{isAvailable},</if>
+            <if test="remarks != null and remarks != ''">#{remarks},</if>
+            <if test="isDeleted != null">#{isDeleted},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+        ON DUPLICATE KEY UPDATE
+            psychologist_name = VALUES(psychologist_name),
+            time_slots = VALUES(time_slots),
+            max_appointments = VALUES(max_appointments),
+            is_available = VALUES(is_available),
+            remarks = VALUES(remarks),
+            update_by = VALUES(update_by),
+            update_time = VALUES(update_time)
+    </insert>
+
+    <update id="updatePsychologistSchedule" parameterType="PsychologistSchedule">
+        update psychologist_schedule
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="psychologistId != null">psychologist_id = #{psychologistId},</if>
+            <if test="psychologistName != null and psychologistName != ''">psychologist_name = #{psychologistName},</if>
+            <if test="scheduleDate != null">schedule_date = #{scheduleDate},</if>
+            <if test="timeSlots != null and timeSlots != ''">time_slots = #{timeSlots},</if>
+            <if test="maxAppointments != null">max_appointments = #{maxAppointments},</if>
+            <if test="isAvailable != null and isAvailable != ''">is_available = #{isAvailable},</if>
+            <if test="remarks != null and remarks != ''">remarks = #{remarks},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deletePsychologistScheduleById" parameterType="Long">
+        update psychologist_schedule set is_deleted = 1 where id = #{id}
+    </update>
+
+    <update id="deletePsychologistScheduleByIds" parameterType="Long">
+        update psychologist_schedule set is_deleted = 1 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <insert id="batchInsertPsychologistSchedule" parameterType="java.util.List">
+        insert into psychologist_schedule (
+        psychologist_id,
+        psychologist_name,
+        schedule_date,
+        time_slots,
+        max_appointments,
+        is_available,
+        remarks,
+        is_deleted,
+        create_by,
+        create_time,
+        update_by,
+        update_time
+        ) values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.psychologistId},
+            #{item.psychologistName},
+            #{item.scheduleDate},
+            #{item.timeSlots},
+            #{item.maxAppointments},
+            #{item.isAvailable},
+            #{item.remarks},
+            0,
+            #{item.createBy},
+            #{item.createTime},
+            #{item.updateBy},
+            #{item.updateTime}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            psychologist_name = VALUES(psychologist_name),
+            time_slots = VALUES(time_slots),
+            max_appointments = VALUES(max_appointments),
+            is_available = VALUES(is_available),
+            remarks = VALUES(remarks),
+            update_by = VALUES(update_by),
+            update_time = VALUES(update_time)
+    </insert>
+
+<!--    <update id="updateScheduleStatus">-->
+<!--        update psychologist_schedule-->
+<!--        set is_available = #{isAvailable},-->
+<!--        update_by = #{updateBy},-->
+<!--        update_time = #{updateTime}-->
+<!--        where id = #{id}-->
+<!--    </update>-->
+
+</mapper>
